@@ -52,3 +52,29 @@ jobs:
         DB_USERNAME: customer_test
         DB_PASSWORD: customer_test_password
       run: ./mvnw -B package
+
+  docker: 
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/customer-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/customer-service:${{ github.sha }}
+
+
